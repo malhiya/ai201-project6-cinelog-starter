@@ -4,8 +4,8 @@
 <!-- Fill in at the end — how you used AI tools during this project -->
 
 ## Comment 1 — Rename
-**What I did:**
-**How I verified:**
+**What I did:** I used the Cmd+Shift+F command to find all instances of save_to_watchlist. I then went through each one and changed it to add_to_watchlist
+**How I verified:** I verified this by asking Claude Code to take another glance at the codebase and run tests to make sure the app still works after the change. 
 
 ## Comment 2 — Deduplication
 **What I did:**
