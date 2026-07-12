@@ -31,9 +31,11 @@ pytest tests/test_watchlist.py -v
 **Tradeoff acknowledged:** Having private by default would reduce social engagement, because fewer public lists would mean less browsing or engagement with other users' curated watchlists, going against a social/engagement product goal. However, I am prioritizing privacy over engagement. If social engagement is important, then an explicit watchlist visibility decision should be present in the UI when a user creates a watchlist.
 
 ## Comment 5 — Sort order
-**My position:**
-**Reasoning:**
-**Engagement with reviewer's point:**
+**My position:** Change the default sort order of films in a user's watchlist by "date added" (DESC), but add a sort parameter to the function so the user can select different sort options. 
+
+**Reasoning:** On CineLog, users typically open their watchlist to pick something to watch tonight, and most often reach for a film they just added after hearing about it, so ordering by "date added" (DESC) puts the most likely pick at the top. Seeing films by "date added" also gives users a clear timeline of their interests for films to watch, allowing for a chance to learn about themselves. However, some users might prefer to see their films in an alphabetical ordering. Each is able to have a customized and personal experience with the sort order options addition. 
+
+**Engagement with reviewer's point:** I agree with your reasoning that most users likely want to see most recently added films to the watchlist. One tradeoff is that sorting newest-first can bury older films a user meant to watch. Rather than a UI change, since the app has no frontend, I suggest adding a sort parameter to the function so those hidden films can still be surfaced, ordered alphabetically or by oldest added first. A more personalized experience can be created with the addition of sort order options.
 
 ## Comment 6 — Rebase
 **What conflicted:**
