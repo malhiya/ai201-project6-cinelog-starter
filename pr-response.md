@@ -38,9 +38,11 @@ pytest tests/test_watchlist.py -v
 **Engagement with reviewer's point:** I agree with your reasoning that most users likely want to see most recently added films to the watchlist. One tradeoff is that sorting newest-first can bury older films a user meant to watch. Rather than a UI change, since the app has no frontend, I suggest adding a sort parameter to the function so those hidden films can still be surfaced, ordered alphabetically or by oldest added first. A more personalized experience can be created with the addition of sort order options.
 
 ## Comment 6 — Rebase
-**What conflicted:**
-**How I resolved it:**
-**How I verified no conflict remains:**
+**What conflicted:** When I rebased onto main, git flagged a conflict in .gitignore. The bigger issue was the film IDs: main had migrated film IDs from integers to UUIDs, but my watchlist code still used integer film_id. The rebase also dropped the WatchlistEntry model, because it only existed in my branch's base and none of my commits re-added it.
+
+**How I resolved it:** I resolved the .gitignore conflict by keeping the union of both sides. I then restored the WatchlistEntry model in models.py and changed its film_id column from db.Integer to db.String(36) to match main's UUID format. I also updated the docstrings in watchlist_service.py and the route so film_id is described as a UUID.
+
+**How I verified no conflict remains:** I ran `git log --merges origin/main..HEAD`, which printed nothing, confirming the history is linear with no merge commits. I also ran the full pytest suite to confirm the UUID changes are consistent and nothing is broken.
 
 ## PR Description
 <!-- Written at the end — feature overview, design decisions, manual testing steps -->
