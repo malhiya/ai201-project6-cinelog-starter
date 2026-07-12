@@ -24,9 +24,11 @@ pytest tests/test_watchlist.py -v
 
 
 ## Comment 4 — Default visibility
-**My position:**
-**Reasoning:**
-**Tradeoff acknowledged:**
+**My position:** Change default to private (```public=False```)
+
+**Reasoning:** On CineLog specifically, a watchlist reveals the films a user plans to watch, which exposes their personal taste and interests (including potentially sensitive ones inferable from niche or revealing titles).  So a silent public default risks disclosing something the user would reasonably expect to keep private. Defaulting the watchlist setting to private has less risk for the user. A user who wants to share their watchlist would have the minor cost of changing their watchlist visibility status to true. However, if the default kept the watchlist public, and a user was unaware of this and found out later, they would feel it was a breach of privacy.
+
+**Tradeoff acknowledged:** Having private by default would reduce social engagement, because fewer public lists would mean less browsing or engagement with other users' curated watchlists, going against a social/engagement product goal. However, I am prioritizing privacy over engagement. If social engagement is important, then an explicit watchlist visibility decision should be present in the UI when a user creates a watchlist.
 
 ## Comment 5 — Sort order
 **My position:**
