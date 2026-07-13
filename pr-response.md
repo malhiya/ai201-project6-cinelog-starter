@@ -1,7 +1,8 @@
 # PR Response Doc — CineLog Watchlist Feature
 
 ## AI Usage
-<!-- Fill in at the end — how you used AI tools during this project -->
+I used Claude Code to stress-test my design arguments for Comments 4 and 5, and to verify the refactor logic alongside running pytest. For Comment 4, I asked what a careful reviewer would push back on and how to make my privacy argument specific to CineLog, which pushed me to ground it in what a watchlist actually reveals about a user rather than a generic privacy claim. For Comment 5, I asked what counterargument a reviewer would raise, which surfaced the tradeoff that newest-first sorting can bury older films and led me to drop a UI-based suggestion in favor of a sort parameter since the app is API-only. In both cases the final position and reasoning are my own — the AI mainly exposed gaps and tradeoffs I then argued through myself. I also used AI to write a short script that exercised the deduplication and UUID logic directly, which I confirmed by running the full pytest suite. Claude Code was also used to create the PR description, however I made sure to look it over and suggest what to add and what to remove. 
+
 
 ## Comment 1 — Rename
 **What I did:** I used the Cmd+Shift+F command to find all instances of save_to_watchlist. I then went through each one and changed it to add_to_watchlist
@@ -44,5 +45,50 @@ pytest tests/test_watchlist.py -v
 
 **How I verified no conflict remains:** I ran `git log --merges origin/main..HEAD`, which printed nothing, confirming the history is linear with no merge commits. I also ran the full pytest suite to confirm the UUID changes are consistent and nothing is broken.
 
+
+## Commit History
+
+![Linear commit history with no merge commits](commit-history.png)
+
 ## PR Description
-<!-- Written at the end — feature overview, design decisions, manual testing steps -->
+
+### Overview
+This PR adds a **watchlist** feature to CineLog. A watchlist holds films a user wants to watch later — distinct from the collection, which holds films they have already watched. The feature adds:
+
+- A `WatchlistEntry` model (`models.py`) linking a user to a film, with a `date_added` timestamp and a `public` visibility flag. Film IDs are UUIDs (`db.String(36)`), aligned with main's integer→UUID refactor.
+- A service layer (`services/watchlist_service.py`): `add_to_watchlist()` and `get_watchlist()`.
+- The `POST /watchlist/<user_id>/add` endpoint to add a film (body: `{ "film_id": "<uuid>" }`).
+- **Deduplication:** adding a film already on the list raises `AlreadyInWatchlistError` instead of silently creating a duplicate.
+- Tests (`tests/test_watchlist.py`) covering `add_to_watchlist()`, following the fixture and assertion structure of `tests/test_collection.py`.
+
+### Design decisions
+
+**1. Default visibility.** The decision is that watchlists should default to **private**. A watchlist reveals the films a user plans to watch, exposing personal taste and potentially sensitive interests, so a silent public default risks disclosing something the user reasonably expects to keep private. I am optimizing for **user privacy** — the cost of a wrong "private" default is a minor, reversible toggle, whereas a wrong "public" default is an involuntary, hard-to-notice disclosure. **Tradeoff:** private-by-default reduces social discovery (fewer public lists to browse), which works against an engagement-driven product goal; if social discovery is a priority, the better path is an explicit visibility choice at creation time rather than a silent default.
+
+**2. Default sort order (date added, DESC).** `get_watchlist()` returns films newest-added first. I am optimizing for the common behavior of opening the watchlist to pick something to watch now — users most often reach for a film they just added, so newest-first surfaces the most likely pick. **Tradeoff:** newest-first can bury older films the user meant to watch; a future `sort` parameter on the function (alphabetical / oldest-first) would let users surface those without a UI change (the app is API-only).
+
+### Manual testing
+
+1. **Start the app** (as the `app` module):
+   ```bash
+   flask --app app run --debug
+   ```
+2. **Create a user and a film** to get valid UUIDs to test with:
+   ```bash
+   python -c "from app import create_app, db; from models import User, Film; app=create_app(); ctx=app.app_context(); ctx.push(); u=User(username='t', email='t@e.com'); f=Film(title='Paddington 2', year=2017); db.session.add_all([u,f]); db.session.commit(); print('USER', u.id); print('FILM', f.id)"
+   ```
+3. **Add a film to the watchlist** — expect `201` and a JSON body with the UUID `film_id`:
+   ```bash
+   curl -i -X POST http://127.0.0.1:5000/watchlist/<USER_ID>/add \
+     -H "Content-Type: application/json" -d '{"film_id": "<FILM_ID>"}'
+   ```
+4. **Add the same film again** — the deduplication check raises `AlreadyInWatchlistError`, preventing a duplicate entry.
+5. **Run the automated tests.** A new test file, `tests/test_watchlist.py`, was added for this feature — it mirrors the fixtures and assertion structure of `tests/test_collection.py` and covers the film-not-found case in `add_to_watchlist()`. Run just the watchlist tests:
+   ```bash
+   pytest tests/test_watchlist.py -v
+   ```
+   Or run the full suite to confirm nothing else broke:
+   ```bash
+   pytest -v
+   ```
+
